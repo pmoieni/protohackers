@@ -21,15 +21,17 @@ func main() {
 		fatal(err)
 
 		go func() {
-			data := bytes.NewBuffer(nil)
-			buf := make([]byte, 256)
-			n, err := conn.Read(buf[0:])
-			fatal(err)
-			data.Write(buf[0:n])
-			fmt.Println(data.String())
+			for {
+				data := bytes.NewBuffer(nil)
+				buf := make([]byte, 256)
+				n, err := conn.Read(buf[0:])
+				fatal(err)
+				data.Write(buf[0:n])
+				fmt.Println(data.String())
 
-			_, err = conn.Write(data.Bytes())
-			fatal(err)
+				_, err = conn.Write(data.Bytes())
+				fatal(err)
+			}
 		}()
 	}
 }
