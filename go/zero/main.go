@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -23,21 +21,14 @@ func main() {
 		fatal(err)
 
 		go func() {
-			for {
-				data := bytes.NewBuffer(nil)
-				buf := make([]byte, 256)
-				n, err := conn.Read(buf[0:])
-				if errors.Is(err, io.EOF) {
-					break
-				}
+			var data bytes.Buffer
+			_, err = io.Copy(&data, conn)
+			fatal(err)
 
-				fatal(err)
-				data.Write(buf[0:n])
-				fmt.Println(data.String())
+			_, err = conn.Write(data.Bytes())
+			fatal(err)
 
-				_, err = conn.Write(data.Bytes())
-				fatal(err)
-			}
+			fatal(conn.Close())
 		}()
 	}
 }
