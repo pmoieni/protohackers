@@ -22,7 +22,7 @@ func main() {
 
 		go func() {
 			var data bytes.Buffer
-			_, err = io.Copy(&data, conn)
+			_, err = data.ReadFrom(conn)
 			fatal(err)
 
 			_, err = conn.Write(data.Bytes())
