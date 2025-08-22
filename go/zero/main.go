@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -25,6 +27,10 @@ func main() {
 				data := bytes.NewBuffer(nil)
 				buf := make([]byte, 256)
 				n, err := conn.Read(buf[0:])
+				if errors.Is(err, io.EOF) {
+					break
+				}
+
 				fatal(err)
 				data.Write(buf[0:n])
 				fmt.Println(data.String())
