@@ -1,10 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"log"
 	"net"
 	"os"
+
+	"github.com/pmoieni/protohackers/go/zero/adapters"
 )
 
 func main() {
@@ -20,12 +21,7 @@ func main() {
 		fatal(err)
 
 		go func() {
-			var data bytes.Buffer
-			_, err = data.ReadFrom(conn)
-			fatal(err)
-
-			_, err = conn.Write(data.Bytes())
-			fatal(err)
+			adapters.UseIOCopyBuffer(conn)
 
 			fatal(conn.Close())
 		}()
