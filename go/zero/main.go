@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net"
 )
@@ -23,6 +24,7 @@ func main() {
 			n, err := conn.Read(buf[0:])
 			fatal(err)
 			data.Write(buf[0:n])
+			fmt.Println(string(data.Bytes()))
 
 			_, err = conn.Write(data.Bytes())
 			fatal(err)
