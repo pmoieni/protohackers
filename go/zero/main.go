@@ -21,8 +21,7 @@ func main() {
 		fatal(err)
 
 		go func() {
-			adapters.UseIOCopyBuffer(conn)
-
+			fatal(adapters.UseBytesBuffer(conn))
 			fatal(conn.Close())
 		}()
 	}

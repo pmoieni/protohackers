@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"bytes"
 	"io"
 	"net"
 )
@@ -10,6 +11,12 @@ func UseIOCopyBuffer(conn net.Conn) error {
 	return err
 }
 
-func UseBytes() {
+func UseBytesBuffer(conn net.Conn) error {
+	var bs bytes.Buffer
+	if _, err := bs.ReadFrom(conn); err != nil {
+		return err
+	}
 
+	_, err := conn.Write(bs.Bytes())
+	return err
 }
