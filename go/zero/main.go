@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 )
 
 func main() {
-	listener, err := net.Listen("tcp4", ":8080")
+	port := os.Getenv("PORT")
+	listener, err := net.Listen("tcp4", ":"+port)
 	fatal(err)
 	defer func() {
 		fatal(listener.Close())
@@ -24,7 +26,7 @@ func main() {
 			n, err := conn.Read(buf[0:])
 			fatal(err)
 			data.Write(buf[0:n])
-			fmt.Println(string(data.Bytes()))
+			fmt.Println(data.String())
 
 			_, err = conn.Write(data.Bytes())
 			fatal(err)
