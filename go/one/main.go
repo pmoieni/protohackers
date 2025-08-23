@@ -56,14 +56,14 @@ func main() {
 		go func() {
 			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
-				var request *req
-				if err := json.Unmarshal(scanner.Bytes(), request); err != nil {
+				var request req
+				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
 					fatal(conn.Close())
 				}
 
-				handleReq(conn, request)
+				handleReq(conn, &request)
 			}
 			fatal(scanner.Err())
 		}()
