@@ -57,7 +57,7 @@ func main() {
 			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
 				var request req
-				if err := request.UnmarshalJSON(scanner.Bytes()); err != nil {
+				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
 					fatal(conn.Close())
