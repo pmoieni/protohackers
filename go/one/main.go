@@ -1,0 +1,114 @@
+package main
+
+import (
+	"bufio"
+	"encoding/json"
+	"errors"
+	"log"
+	"math"
+	"net"
+	"os"
+)
+
+type req struct {
+	Method *string  `json:"method"`
+	Number *float64 `json:"number"`
+}
+
+// implement unmarshaler
+func (r *req) UnmarshalJSON(bs []byte) error {
+	if err := json.Unmarshal(bs, r); err != nil {
+		return err
+	}
+
+	if r.Method == nil || r.Number == nil {
+		return errors.New("malformed request")
+	}
+
+	if *r.Method != "isPrime" {
+		return errors.New("malformed request")
+	}
+
+	return nil
+}
+
+type res struct {
+	Method string `json:"method"`
+	Prime  bool   `json:"prime"`
+}
+
+func (r *res) Marshal() ([]byte, error) {
+	return json.Marshal(r)
+}
+
+func main() {
+	port := os.Getenv("PORT")
+	listener, err := net.Listen("tcp4", ":"+port)
+	fatal(err)
+	defer func() {
+		fatal(listener.Close())
+	}()
+
+	for {
+		conn, err := listener.Accept()
+		fatal(err)
+
+		go func() {
+			scanner := bufio.NewScanner(conn)
+			for scanner.Scan() {
+				var request *req
+				if err := json.Unmarshal(scanner.Bytes(), request); err != nil {
+					_, err := conn.Write([]byte("bingus"))
+					fatal(err)
+					fatal(conn.Close())
+				}
+
+				handleReq(conn, request)
+			}
+			fatal(scanner.Err())
+		}()
+	}
+}
+
+func handleReq(conn net.Conn, r *req) {
+	isInt := math.Trunc(*r.Number) == *r.Number
+	response := &res{Method: "isPrime", Prime: false}
+	if !isInt {
+		bs, err := response.Marshal()
+		fatal(err)
+		_, err = conn.Write(bs)
+		fatal(err)
+		return
+	}
+
+	isPrime := (func(n int) bool {
+		for i := 2; i <= int(math.Floor(math.Sqrt(float64(n)))); i++ {
+			if n%i == 0 {
+				return false
+			}
+		}
+		return n > 1
+
+	})(int(*r.Number))
+
+	if !isPrime {
+		bs, err := response.Marshal()
+		fatal(err)
+		_, err = conn.Write(bs)
+		fatal(err)
+		return
+	}
+
+	response.Prime = true
+
+	bs, err := response.Marshal()
+	fatal(err)
+	_, err = conn.Write(bs)
+	fatal(err)
+}
+
+func fatal(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
