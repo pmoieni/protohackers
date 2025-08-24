@@ -46,7 +46,10 @@ type res struct {
 }
 
 func (r *res) Marshal() ([]byte, error) {
-	return json.Marshal(r)
+	bs, err := json.Marshal(r)
+	bs = append(bs, []byte("\n")...)
+
+	return bs, err
 }
 
 type Server struct {
@@ -79,14 +82,13 @@ func (s *Server) listen() error {
 				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
+					defer conn.Close()
 					return
 				}
 
 				handleReq(conn, &request)
 			}
 			fatal(scanner.Err())
-
-			defer conn.Close()
 		}()
 	}
 }
@@ -94,6 +96,7 @@ func (s *Server) listen() error {
 func main() {
 	s := &Server{}
 	s.Run()
+	defer s.Close()
 }
 
 func handleReq(conn net.Conn, r *req) {

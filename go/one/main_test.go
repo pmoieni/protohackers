@@ -63,7 +63,7 @@ func TestServer(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.label, func(t *testing.T) {
-			conn, err := net.Dial("tcp4", ":46290")
+			conn, err := net.Dial("tcp4", ":1234")
 			require.NoError(t, err)
 			defer conn.Close()
 
