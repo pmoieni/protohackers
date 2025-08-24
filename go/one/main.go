@@ -10,6 +10,10 @@ import (
 	"os"
 )
 
+var (
+	errMalformedReq = errors.New("malformed request")
+)
+
 type req struct {
 	Method string   `json:"method"`
 	Number *float64 `json:"number"`
@@ -30,7 +34,7 @@ func (r *req) UnmarshalJSON(bs []byte) error {
 	}
 
 	if aux.Method != "isPrime" || aux.Number == nil {
-		return errors.New("malformed request")
+		return errMalformedReq
 	}
 
 	return nil
@@ -45,16 +49,27 @@ func (r *res) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func main() {
+type Server struct {
+	l net.Listener
+}
+
+func (s *Server) Run() error {
 	port := os.Getenv("PORT")
 	listener, err := net.Listen("tcp4", ":"+port)
 	fatal(err)
-	defer func() {
-		fatal(listener.Close())
-	}()
 
+	s.l = listener
+	s.listen()
+	return nil
+}
+
+func (s *Server) Close() error {
+	return s.l.Close()
+}
+
+func (s *Server) listen() {
 	for {
-		conn, err := listener.Accept()
+		conn, err := s.l.Accept()
 		fatal(err)
 
 		go func() {
@@ -64,14 +79,21 @@ func main() {
 				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
-					fatal(conn.Close())
+					return
 				}
 
 				handleReq(conn, &request)
 			}
 			fatal(scanner.Err())
+
+			defer conn.Close()
 		}()
 	}
+}
+
+func main() {
+	s := &Server{}
+	s.Run()
 }
 
 func handleReq(conn net.Conn, r *req) {
