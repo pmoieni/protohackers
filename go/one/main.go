@@ -17,11 +17,19 @@ type req struct {
 
 // implement unmarshaler
 func (r *req) UnmarshalJSON(bs []byte) error {
-	if err := json.Unmarshal(bs, r); err != nil {
+	type Alias req
+
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(r),
+	}
+
+	if err := json.Unmarshal(bs, &aux); err != nil {
 		return err
 	}
 
-	if r.Method != "isPrime" || r.Number == nil {
+	if aux.Method != "isPrime" || aux.Number == nil {
 		return errors.New("malformed request")
 	}
 
