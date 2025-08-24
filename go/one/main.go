@@ -62,7 +62,6 @@ func main() {
 			for scanner.Scan() {
 				var request req
 				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
-					println("DEBUG: " + err.Error())
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
 					fatal(conn.Close())
