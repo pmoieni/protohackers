@@ -15,7 +15,7 @@ var (
 )
 
 type req struct {
-	Method string   `json:"method"`
+	Method *string  `json:"method"`
 	Number *float64 `json:"number"`
 }
 
@@ -33,7 +33,7 @@ func (r *req) UnmarshalJSON(bs []byte) error {
 		return err
 	}
 
-	if aux.Method != "isPrime" || aux.Number == nil {
+	if aux.Method == nil || *aux.Method != "isPrime" || aux.Number == nil {
 		return errMalformedReq
 	}
 
@@ -53,21 +53,20 @@ type Server struct {
 	l net.Listener
 }
 
-func (s *Server) Run() error {
+func (s *Server) Run() {
 	port := os.Getenv("PORT")
 	listener, err := net.Listen("tcp4", ":"+port)
 	fatal(err)
 
 	s.l = listener
 	s.listen()
-	return nil
 }
 
 func (s *Server) Close() error {
 	return s.l.Close()
 }
 
-func (s *Server) listen() {
+func (s *Server) listen() error {
 	for {
 		conn, err := s.l.Accept()
 		fatal(err)
@@ -76,6 +75,7 @@ func (s *Server) listen() {
 			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
 				var request req
+				log.Println(scanner.Text())
 				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
@@ -100,6 +100,7 @@ func handleReq(conn net.Conn, r *req) {
 	isInt := math.Trunc(*r.Number) == *r.Number
 	response := &res{Method: "isPrime", Prime: false}
 	if !isInt {
+		log.Println("NOT INT")
 		bs, err := response.Marshal()
 		fatal(err)
 		_, err = conn.Write(bs)
@@ -118,6 +119,7 @@ func handleReq(conn net.Conn, r *req) {
 	})(int(*r.Number))
 
 	if !isPrime {
+		log.Println("NOT PRIME")
 		bs, err := response.Marshal()
 		fatal(err)
 		_, err = conn.Write(bs)
@@ -125,6 +127,7 @@ func handleReq(conn net.Conn, r *req) {
 		return
 	}
 
+	log.Println("IT'S PRIME!!!")
 	response.Prime = true
 
 	bs, err := response.Marshal()
