@@ -11,7 +11,7 @@ import (
 )
 
 type req struct {
-	Method *string  `json:"method"`
+	Method string   `json:"method"`
 	Number *float64 `json:"number"`
 }
 
@@ -21,11 +21,7 @@ func (r *req) UnmarshalJSON(bs []byte) error {
 		return err
 	}
 
-	if r.Method == nil || r.Number == nil {
-		return errors.New("malformed request")
-	}
-
-	if *r.Method != "isPrime" {
+	if r.Method != "isPrime" || r.Number == nil {
 		return errors.New("malformed request")
 	}
 
@@ -58,6 +54,7 @@ func main() {
 			for scanner.Scan() {
 				var request req
 				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
+					println("DEBUG: " + err.Error())
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
 					fatal(conn.Close())
