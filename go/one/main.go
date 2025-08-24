@@ -78,7 +78,6 @@ func (s *Server) listen() error {
 			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
 				var request req
-				log.Println(scanner.Text())
 				if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
 					_, err := conn.Write([]byte("bingus"))
 					fatal(err)
@@ -103,7 +102,6 @@ func handleReq(conn net.Conn, r *req) {
 	isInt := math.Trunc(*r.Number) == *r.Number
 	response := &res{Method: "isPrime", Prime: false}
 	if !isInt {
-		log.Println("NOT INT")
 		bs, err := response.Marshal()
 		fatal(err)
 		_, err = conn.Write(bs)
@@ -122,7 +120,6 @@ func handleReq(conn net.Conn, r *req) {
 	})(int(*r.Number))
 
 	if !isPrime {
-		log.Println("NOT PRIME")
 		bs, err := response.Marshal()
 		fatal(err)
 		_, err = conn.Write(bs)
@@ -130,7 +127,6 @@ func handleReq(conn net.Conn, r *req) {
 		return
 	}
 
-	log.Println("IT'S PRIME!!!")
 	response.Prime = true
 
 	bs, err := response.Marshal()
